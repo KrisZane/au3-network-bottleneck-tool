@@ -33,65 +33,65 @@ GUISetState(@SW_SHOW);
 
 $resLogfile = FileOpen("log.txt", 1);
 If $resLogfile = -1 Then
-	MsgBox(16, "Error", "Unable to open log file.");
-	Exit;
+    MsgBox(16, "Error", "Unable to open log file.");
+    Exit;
 EndIf
 
 Func split_ping()
-	$intPingTimer = TimerInit();
-	If $blnOnoff Then
-		$intPingwan = Ping(GUICtrlRead($resWanhost));
-		$intPinglan = Ping(GUICtrlRead($resLanhost));
-		If @error Then
-			MsgBox(16, "Error", "Error number: " & @error & @CRLF & "Consult Manual");
-			Exit;
-		EndIf
-		$strPing = @HOUR & ":" & @MIN & ":" & @SEC & " - Wan: " & $intPingwan & " Lan: " & $intPinglan;
-		$intMaxping = 50;
-		If $intPingwan > GUICtrlRead($resWanhostms) OR $intPinglan > GUICtrlRead($resLanhostms) OR $intPingwan <= 0 OR $intPinglan <= 0 Then
-			$strPing &= "!!!!!!!!!!!" & @CRLF;
-		Else
-			$strPing &= @CRLF;
-		EndIf
-		_ArrayAdd($arrPings, $strPing);
-		_ArrayReverse($arrPings);
-		$strList = _ArrayToString($arrPings);
-		_ArrayReverse($arrPings);
-		FileWrite($resLogfile, $strPing);
-		GUICtrlSetData($resPinglist, $strList);
-	Else
-		
-	EndIf
+    $intPingTimer = TimerInit();
+    If $blnOnoff Then
+        $intPingwan = Ping(GUICtrlRead($resWanhost));
+        $intPinglan = Ping(GUICtrlRead($resLanhost));
+        If @error Then
+            MsgBox(16, "Error", "Error number: " & @error & @CRLF & "Consult Manual");
+            Exit;
+        EndIf
+        $strPing = @HOUR & ":" & @MIN & ":" & @SEC & " - Wan: " & $intPingwan & " Lan: " & $intPinglan;
+        $intMaxping = 50;
+        If $intPingwan > GUICtrlRead($resWanhostms) OR $intPinglan > GUICtrlRead($resLanhostms) OR $intPingwan <= 0 OR $intPinglan <= 0 Then
+            $strPing &= "!!!!!!!!!!!" & @CRLF;
+        Else
+            $strPing &= @CRLF;
+        EndIf
+        _ArrayAdd($arrPings, $strPing);
+        _ArrayReverse($arrPings);
+        $strList = _ArrayToString($arrPings);
+        _ArrayReverse($arrPings);
+        FileWrite($resLogfile, $strPing);
+        GUICtrlSetData($resPinglist, $strList);
+    Else
+        
+    EndIf
 EndFunc
 
 Func whattorun()
-	If TimerDiff($intPingTimer) > $intTimeout AND $blnOnoff Then
-		split_ping();
-	EndIf
+    If TimerDiff($intPingTimer) > $intTimeout AND $blnOnoff Then
+        split_ping();
+    EndIf
 EndFunc
 
 While 1
-	$resSysmsg = GUIGetMsg()
-	If $resSysmsg = $GUI_EVENT_CLOSE Then ExitLoop
-	If $resSysmsg = $btnStartStop Then
-		$strStartStop = GUICtrlRead($btnStartStop);
-		If $strStartStop == "Start" Then
-			GUICtrlSetData($btnStartStop, "Stop");
-			$blnOnoff = True;
-			GUICtrlSetStyle($resWanhost, $ES_READONLY);
-			GUICtrlSetStyle($resLanhost, $ES_READONLY);
-			GUICtrlSetStyle($resWanhostms, $ES_READONLY);
-			GUICtrlSetStyle($resLanhostms, $ES_READONLY);
-		ElseIf $strStartStop == "Stop" Then
-			GUICtrlSetData($btnStartStop, "Start");
-			$blnOnoff = False;
-			GUICtrlSetStyle($resWanhost, $WS_TABSTOP);
-			GUICtrlSetStyle($resLanhost, $WS_TABSTOP);
-			GUICtrlSetStyle($resWanhostms, $WS_TABSTOP);
-			GUICtrlSetStyle($resLanhostms, $WS_TABSTOP);
-		EndIf
-	EndIf
-	whattorun();
+    $resSysmsg = GUIGetMsg()
+    If $resSysmsg = $GUI_EVENT_CLOSE Then ExitLoop
+    If $resSysmsg = $btnStartStop Then
+        $strStartStop = GUICtrlRead($btnStartStop);
+        If $strStartStop == "Start" Then
+            GUICtrlSetData($btnStartStop, "Stop");
+            $blnOnoff = True;
+            GUICtrlSetStyle($resWanhost, $ES_READONLY);
+            GUICtrlSetStyle($resLanhost, $ES_READONLY);
+            GUICtrlSetStyle($resWanhostms, $ES_READONLY);
+            GUICtrlSetStyle($resLanhostms, $ES_READONLY);
+        ElseIf $strStartStop == "Stop" Then
+            GUICtrlSetData($btnStartStop, "Start");
+            $blnOnoff = False;
+            GUICtrlSetStyle($resWanhost, $WS_TABSTOP);
+            GUICtrlSetStyle($resLanhost, $WS_TABSTOP);
+            GUICtrlSetStyle($resWanhostms, $WS_TABSTOP);
+            GUICtrlSetStyle($resLanhostms, $WS_TABSTOP);
+        EndIf
+    EndIf
+    whattorun();
 WEnd
 FileClose($resLogfile);
 GUIDelete();
