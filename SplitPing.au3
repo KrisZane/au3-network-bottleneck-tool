@@ -12,7 +12,7 @@ Local $blnOnoff = False;
 Local $intTimeout = 5000;
 Local $intPingTimer = TimerInit();
 
-GUICreate("Split Pinger By Kristian Bøtcher", 350, 350);
+GUICreate("Split Pinger By Kristian B", 350, 350);
 
 $btnStartStop = GUICtrlCreateButton("Start", 130, 320, 80, 20);
 
