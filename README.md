@@ -1,4 +1,4 @@
-# Nexination Net Fix
+# Nexination NetworkKit
 Tool for fixing and troubleshooting local network, written in AU3
 
 **How to use:**
