@@ -42,12 +42,14 @@ Dim $firewallRuleIps = GUICtrlCreateInput("192.168.1.1,172.16.1.1", 70, 100, 100
 GUICtrlCreateLabel("Protocol:", 20, 127);
 Dim $firewallRuleProtocol = GUICtrlCreateCombo("", 70, 125, 100, 20);
 GUICtrlSetData($firewallRuleProtocol, "UDP|TCP|ANY", "UDP");
-GUICtrlCreateLabel("Mode:", 20, 152);
-Dim $firewallRuleMode = GUICtrlCreateCombo("", 70, 150, 100, 20);
-GUICtrlSetData($firewallRuleMode, "allow|block|bypass", "block");
-Dim $firewallRuleAdd = GUICtrlCreateButton("Create rule", 180, 50, 100, 20);
-Dim $firewallRuleUpdate = GUICtrlCreateButton("Update rule", 180, 75, 100, 20);
-Dim $firewallRuleUpdate = GUICtrlCreateButton("View rule", 180, 100, 100, 20);
+;GUICtrlCreateLabel("Mode:", 20, 152);
+;Dim $firewallRuleMode = GUICtrlCreateCombo("", 70, 150, 100, 20);
+Dim $firewallOutput = GUICtrlCreateEdit("", 70, 175, 200, 100, $ES_AUTOVSCROLL + $WS_VSCROLL + $ES_READONLY);
+;GUICtrlSetData($firewallRuleMode, "allow|block|bypass", "block");
+Dim $firewallRuleAdd = GUICtrlCreateButton("Create rules", 180, 50, 100, 20);
+;Dim $firewallRuleUpdate = GUICtrlCreateButton("Update rule", 180, 75, 100, 20);
+Dim $firewallRuleRemove = GUICtrlCreateButton("Remove rules", 180, 75, 100, 20);
+Dim $firewallRuleView = GUICtrlCreateButton("View rules", 180, 100, 100, 20);
 Dim $firewallRuleEnableDisable = GUICtrlCreateButton("Enable/Disable", 180, 150, 100, 20);
 
 GUICtrlCreateTabItem("Info");
@@ -99,25 +101,50 @@ Func printFile($fileName, $content)
   FileClose($file);
 EndFunc
 
-Func firewallCreateRule($name, $ips, $ports, $protocol, $action)
-  Dim $commandIn = 'netsh advfirewall firewall add rule name="' & $name & '" protocol=' & $protocol & ' dir=in remoteport=' & $ports & ' action=' & $action & ' remoteip=' & $ips;
-  Dim $commandOut = 'netsh advfirewall firewall add rule name="' & $name & '" protocol=' & $protocol & ' dir=out remoteport=' & $ports & ' action=' & $action & ' remoteip=' & $ips;
+Func firewallCreateRule($name, $ips, $ports, $protocol);, $action)
+  Dim $ipList = StringSplit($ips, ",", $STR_NOCOUNT);
+  Dim $ipListString = '0.0.0.0-';
   
-  Dim $iPidIn = Run(@ComSpec & " /c " & $commandIn, "", @SW_HIDE);
-  Dim $iPidOut = Run(@ComSpec & " /c " & $commandOut, "", @SW_HIDE);
+  _ArraySort($ipList);
+  For $ip IN $ipList
+    Dim $inter = _ipToInt($ip);
+    $ipListString &= _intToIp($inter-1) & ',';
+    $ipListString &= _intToIp($inter+1) & '-';
+  Next
   
-  ;ProcessWaitClose($iPID)
-  ;Local $sOutput = StdoutRead($iPID)
-  ;Local $aArray = StringSplit(StringTrimRight(StringStripCR($sOutput), StringLen(@CRLF)), @CRLF)
-  ;_ArrayDisplay($aArray)
+  $ipListString &= '255.255.255.255';
+  
+  Dim $commandIn = 'netsh advfirewall firewall add rule name="' & $name & '" protocol=' & $protocol & ' dir=in remoteport=' & $ports  & ' remoteip=' & $ipListString & ' action=block'; & $action
+  Dim $commandOut = 'netsh advfirewall firewall add rule name="' & $name & '" protocol=' & $protocol & ' dir=out remoteport=' & $ports & ' remoteip=' & $ipListString & ' action=block'; & $action
+  
+  Dim $pidIn = Run(@ComSpec & " /c " & $commandIn, "", @SW_HIDE);
+  Dim $pidOut = Run(@ComSpec & " /c " & $commandOut, "", @SW_HIDE);
+  
+  GUICtrlSetData($firewallOutput, 'Rules created!' & $ipListString);
 EndFunc
 
-Func firewallUpdateRule($name, $ips, $ports, $protocol, $action)
-;netsh advfirewall firewall set rule name="aaFW" new remoteip=0.0.0.0-192.168.1.0,192.168.1.2-172.16.1.0,172.16.1.2-255.255.255.255
+;Func firewallUpdateRule($name, $ips, $ports, $protocol, $action)
+  ;netsh advfirewall firewall set rule name="aaFW" new remoteip=0.0.0.0-192.168.1.0,192.168.1.2-172.16.1.0,172.16.1.2-255.255.255.255
+;EndFunc
+Func firewallDeleteRule($name)
+  Dim $command = 'netsh advfirewall firewall delete rule name="' & $name & '"';
+  Dim $pid = Run(@ComSpec & " /c " & $command, "", @SW_HIDE, $STDOUT_CHILD);
+  
+  firewallOutputDump($pid);
 EndFunc
 
 Func firewallGetRule($name)
-;netsh advfirewall firewall show rule name="aaFW"
+  Dim $command = 'netsh advfirewall firewall show rule name="' & $name & '"';
+  Dim $pid = Run(@ComSpec & " /c " & $command, "", @SW_HIDE, $STDOUT_CHILD);
+  
+  firewallOutputDump($pid);
+EndFunc
+
+Func firewallOutputDump($pid)
+  ProcessWaitClose($pid);
+  Dim $output = StdoutRead($pid);
+
+  GUICtrlSetData($firewallOutput, $output);
 EndFunc
 
 Func firewallEnableDisableRule($name)
@@ -138,13 +165,13 @@ Func buildIpArray($ips)
 EndFunc
 
 Func _intToIp($ip)
-    Return Number(BinaryMid($ip, 1, 1)) & "." & Number(BinaryMid($ip, 2, 1)) & "." & Number(BinaryMid($ip, 3, 1)) & "." & Number(BinaryMid($ip, 4, 1));
+    Return Number(BinaryMid($ip, 4, 1)) & "." & Number(BinaryMid($ip, 3, 1)) & "." & Number(BinaryMid($ip, 2, 1)) & "." & Number(BinaryMid($ip, 1, 1));
 EndFunc
 
 Func _ipToInt($ip)
-    Local $ipSplit = StringSplit($ip, ".");
+    Dim $ipSplit = StringSplit($ip, ".");
     ReDim $ipSplit[5];
-    Return Dec(Hex($ipSplit[4], 2) & Hex($ipSplit[3], 2) & Hex($ipSplit[2], 2) & Hex($ipSplit[1], 2))
+    Return Dec(Hex($ipSplit[1], 2) & Hex($ipSplit[2], 2) & Hex($ipSplit[3], 2) & Hex($ipSplit[4], 2))
 EndFunc
 
 While 1
@@ -156,12 +183,16 @@ While 1
   ElseIf $guiEvent = $probeHostAdd Then
     _ArrayPush($probeHosts, GUICtrlRead($probeHost))
     GUICtrlSetData($probeHostDisplay, _ArrayToString($probeHosts));
-  ElseIf $guiEvent = $firewallRuleUpdate Then
-    firewallUpdateRule(GUICtrlRead($firewallRuleName), GUICtrlRead($firewallRuleIps), GUICtrlRead($firewallRulePorts), GUICtrlRead($firewallRuleProtocol), GUICtrlRead($firewallRuleMode));
-  ElseIf $guiEvent = $firewallRuleAdd Then
-    firewallCreateRule(GUICtrlRead($firewallRuleName), GUICtrlRead($firewallRuleIps), GUICtrlRead($firewallRulePorts), GUICtrlRead($firewallRuleProtocol), GUICtrlRead($firewallRuleMode));
   ElseIf $guiEvent = $firewallRuleEnableDisable Then
     firewallEnableDisableRule(GUICtrlRead($firewallRuleName));
+  ;ElseIf $guiEvent = $firewallRuleUpdate Then
+    ;firewallUpdateRule(GUICtrlRead($firewallRuleName), GUICtrlRead($firewallRuleIps), GUICtrlRead($firewallRulePorts), GUICtrlRead($firewallRuleProtocol), GUICtrlRead($firewallRuleMode));
+  ElseIf $guiEvent = $firewallRuleAdd Then
+    firewallCreateRule(GUICtrlRead($firewallRuleName), GUICtrlRead($firewallRuleIps), GUICtrlRead($firewallRulePorts), GUICtrlRead($firewallRuleProtocol));, GUICtrlRead($firewallRuleMode));
+  ElseIf $guiEvent = $firewallRuleRemove Then
+    firewallDeleteRule(GUICtrlRead($firewallRuleName));
+  ElseIf $guiEvent = $firewallRuleView Then
+    firewallGetRule(GUICtrlRead($firewallRuleName));
   EndIf
   If $probeOnOff AND TimerDiff($probeWaitTimer) > (5*$thousand) Then
     probeScan();
