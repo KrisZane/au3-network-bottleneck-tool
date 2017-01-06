@@ -15,7 +15,7 @@ Dim $thisIp = InetRead("http://www.myexternalip.com/raw");
 Dim $ruleEnabled = True;
 
 TCPStartup()
-GUICreate("Nexination Net Fix", 350, 350);
+GUICreate("Nexination Networkkit", 350, 350);
 GUICtrlCreateTab(0, 0, 352, 351);
 
 GUICtrlCreateLabel("Status:", 20, 322);
@@ -32,13 +32,13 @@ Dim $probeStartStop = GUICtrlCreateButton("Start", 130, 80, 80, 20);
 Dim $probeView = GUICtrlCreateEdit("", 20, 100, 300, 200, $ES_AUTOVSCROLL + $WS_VSCROLL + $ES_READONLY);
 
 GUICtrlCreateTabItem("Firewall");
-GUICtrlCreateLabel("Easy rule builder", 20, 27);
+GUICtrlCreateLabel("Blocking rule builder", 20, 27);
 GUICtrlCreateLabel("Name:", 20, 52);
 Dim $firewallRuleName = GuiCtrlCreateInput("aaFW", 70, 50, 100, 20);
 GUICtrlCreateLabel("Port list:", 20, 77);
 Dim $firewallRulePorts = GuiCtrlCreateInput("6672,61455-61458", 70, 75, 100, 20);
 GUICtrlCreateLabel("IP's allow:", 20, 102);
-Dim $firewallRuleIps = GUICtrlCreateInput("5.13.232.161,62.199.181.11,78.249.181.86", 70, 100, 100, 20);
+Dim $firewallRuleIps = GUICtrlCreateInput("192.168.1.1,172.16.1.1", 70, 100, 100, 20);
 GUICtrlCreateLabel("Protocol:", 20, 127);
 Dim $firewallRuleProtocol = GUICtrlCreateCombo("", 70, 125, 100, 20);
 GUICtrlSetData($firewallRuleProtocol, "UDP|TCP|ANY", "UDP");
@@ -113,11 +113,11 @@ Func firewallCreateRule($name, $ips, $ports, $protocol, $action)
 EndFunc
 
 Func firewallUpdateRule($name, $ips, $ports, $protocol, $action)
-;netsh advfirewall firewall set rule name="aaGTAFW" new remoteip=0.0.0.0-5.13.221.186,5.13.221.188-62.199.181.10,62.199.181.12-79.86.219.104,79.86.219.106-84.194.239.174,84.194.239.176-255.255.255.255
+;netsh advfirewall firewall set rule name="aaFW" new remoteip=0.0.0.0-192.168.1.0,192.168.1.2-172.16.1.0,172.16.1.2-255.255.255.255
 EndFunc
 
 Func firewallGetRule($name)
-;netsh advfirewall firewall show rule name="aaGTAFW"
+;netsh advfirewall firewall show rule name="aaFW"
 EndFunc
 
 Func firewallEnableDisableRule($name)
